@@ -33,11 +33,11 @@ const grammar: Grammar = {
     entities: { time: "10:00" },
   },
   "meeting": {
-  intent: "None",
+  intent: "meeting",
   entities: { choice: "booking a meeting"},
   },
   "information": {
-  intent: "None",
+  intent: "information",
   entities: { choice: "finding information"},
   },
   "celebrity": {
