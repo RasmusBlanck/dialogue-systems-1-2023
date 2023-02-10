@@ -32,6 +32,7 @@ const grammar: Grammar = {
   },
 };
 
+/*
 const getEntity = (context: SDSContext, entity: string) => {
   // lowercase the utterance and remove tailing "."
   let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
@@ -42,8 +43,205 @@ const getEntity = (context: SDSContext, entity: string) => {
   }
   return false;
 };
+*/
+
+const getIntent = (context: SDSContext) => {
+  return context.nluResult.prediction.topIntent;
+}
+
 
 export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
+  initial: "idle",
+  states: {
+    idle: {
+      on: {
+        CLICK: "init",
+      },
+    },
+    init: {
+      on: {
+        TTS_READY: "menu",
+        CLICK: "menu",
+      },
+    },
+    
+    menu: {
+      initial: "prompt",
+      on: {
+        RECOGNISED: [
+          {
+            target: "welcome",
+            cond: (context) => getIntent(context) === "meeting",
+//            cond: (context) => getEntity(context, "nluResult") === "meeting",
+            actions: assign({
+//              choice: (context) => getEntity(context, "booking a meeting"),
+              choice: "booking a meeting",
+            }),
+          },
+          {
+            target: "information",
+            cond: (context) => getIntent(context) === "information",
+//            cond: (context) => getEntity(context, "nluResult") === "information",
+            actions: assign({
+//              choice: (context) => getEntity(context, "finding information"),
+              choice: "finding information",
+            }),
+          },
+          {
+            target: ".nomatch",
+          },
+        ],
+        TIMEOUT: ".prompt",
+      },
+      states: {
+        prompt: {
+          entry: say('Do you want to book a  <prosody rate="-40%">meeting</prosody> <break time="300ms"/>or find information about someone?'),//test RB
+          on: { ENDSPEECH: "ask" },
+        },
+        ask: {
+          entry: send("LISTEN"),
+        },
+        nomatch: {
+          entry: say(
+            "Sorry, I don't know what it is. Tell me something I know."
+          ),
+          on: { ENDSPEECH: "ask" },
+        },
+      },
+    },
+    
+    
+    welcome: {
+      initial: "prompt",
+      on: {
+        RECOGNISED: [
+          {
+            target: "info",
+            cond: (context) => !!getEntity(context, "title"),
+            actions: assign({
+              title: (context) => getEntity(context, "title"),
+            }),
+          },
+          {
+            target: ".nomatch",
+          },
+        ],
+        TIMEOUT: ".prompt",
+      },
+      states: {
+        prompt: {
+          entry: say("Ok, let's create a meeting. What is it about?"),
+          on: { ENDSPEECH: "ask" },
+        },
+        ask: {
+          entry: send("LISTEN"),
+        },
+        nomatch: {
+          entry: say(
+            "Sorry, I don't know what it is. Tell me something I know."
+          ),
+          on: { ENDSPEECH: "ask" },
+        },
+      },
+    },
+    
+    information: {
+      initial: "prompt",
+      on: {
+        RECOGNISED: [
+          {
+            target: "get_info",
+            actions: assign({
+              celeb: (context) => context.recResult[0].utterance.toLowerCase().replace(/.$/g, ""),
+            }),
+          },
+          {
+            target: ".nomatch",
+          },
+        ],
+        TIMEOUT: ".prompt",
+      },
+      states: {
+        prompt: {
+          entry: say("Ok, who do you want information about?"),
+          on: { ENDSPEECH: "ask" },
+        },
+        ask: {
+          entry: send("LISTEN"),
+        },
+        nomatch: {
+          entry: say(
+            "Sorry, I don't know what it is. Tell me something I know."
+          ),
+          on: { ENDSPEECH: "ask" },
+        },
+      },
+    },    
+    
+    
+    
+    info: {
+      entry: send((context) => ({
+        type: "SPEAK",
+        value: `OK, ${context.title}`,
+      })),
+      on: { ENDSPEECH: "init" },
+    },
+    
+    get_info: {
+      invoke: {
+        id: 'get_info',
+        src: (context, event) => kbRequest(context.celeb),
+        onDone: [
+        {
+          target: "info_three",
+          cond: (context,event) => event.data.AbstractText !== "",
+          actions:  assign({ info: (context, event) => event.data.AbstractText }),
+        },
+        {
+           target: "failure_one"
+        },
+        ],
+        onError: {
+          target: "failure"
+        },           
+      },
+    },
+
+    failure_one: {
+      entry: send((context) => ({
+        type: 'SPEAK',
+        value: `I don't think ${context.celeb} is a celebrity.`,
+      })),
+      on: { ENDSPEECH: 'information' }
+    },
+
+
+    
+    failure: {
+    // never goes here?
+      entry: send((context) => ({
+        type: 'SPEAK',
+        value: `Sorry, there is no information on ${context.celeb} available.`,
+      })),
+      on: { ENDSPEECH: 'information' }
+    },
+    
+    
+    
+    info_three: {
+      entry: send((context) => ({
+        type: "SPEAK",
+        value: `OK, info on ${context.celeb} available`,
+      })),
+      on: { ENDSPEECH: "init" },
+    }, 
+  },
+};
+
+
+
+/*export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
   initial: "idle",
   states: {
     idle: {
@@ -63,9 +261,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "info",
-            cond: (context) => !!getEntity(context, "title"),
+            cond: (context) => !!getEntity(context, "nluResult"),
             actions: assign({
-              title: (context) => getEntity(context, "title"),
+              title: (context) => getEntity(context, "nluResult"),
             }),
           },
           {
@@ -93,12 +291,13 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     info: {
       entry: send((context) => ({
         type: "SPEAK",
-        value: `OK, ${context.title}`,
+        value: `OK, ${context.nluResult}`,
       })),
       on: { ENDSPEECH: "init" },
     },
   },
 };
+*/
 
 const kbRequest = (text: string) =>
   fetch(
