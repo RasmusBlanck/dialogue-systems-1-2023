@@ -16,7 +16,7 @@ Available TTS platforms:
 - Google TTS: [[https://cloud.google.com/text-to-speech/docs/ssml][Docs]], you can test it in the Google Actions Console
 - Amazon Polly: [[https://developer.amazon.com/en-GB/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html][Docs]], [[https://console.aws.amazon.com/polly/home/SynthesizeSpeech][Test]] (you need to have an account)
 - IBM Watson: [[https://cloud.ibm.com/docs/services/text-to-speech?topic=text-to-speech-ssml&cm_mc_uid=40249035982415833944697&cm_mc_sid_50200000=96929811583394469719&cm_mc_sid_52640000=99688681583394469725][Docs]]
-- Azure Text-to-Speech: [[https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/index-text-to-speech][Docs]], [[https://speech.microsoft.com/portal/7e0abdfb01164e0eaf237b7bbfad409d/audiocontentcreation][Speech Studio]]
+- Azure Text-to-Speech: [[https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/index-text-to-speech][Docs]], [[https://speech.microsoft.com/][Speech Studio]] (audio content creation)
 
 * Part A: SSML warm-up exercise
 The objective of this assignment is to "style" dialogue system's utterances. Here is what are going to work with:
