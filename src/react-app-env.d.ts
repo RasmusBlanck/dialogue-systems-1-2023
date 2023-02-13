@@ -47,6 +47,7 @@ interface SDSContext {
   audioCtx: any;
 
   title: any;
+  day: any;
   topic: string;
 }
 

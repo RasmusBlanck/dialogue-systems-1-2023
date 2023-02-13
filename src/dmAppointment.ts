@@ -32,18 +32,16 @@ const grammar: Grammar = {
   },
 };
 
-/*
 const getEntity = (context: SDSContext, entity: string) => {
-  // lowercase the utterance and remove tailing "."
-  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
-  if (u in grammar) {
-    if (entity in grammar[u].entities) {
-      return grammar[u].entities[entity];
-    }
-  }
+
+  ent = context.nluResult.prediction.entities;
+  
+  for (i=0; i<ent.length; i++)
+    if( ent[i].category === entity) 
+      return ent[i].text;
   return false;
-};
-*/
+}
+
 
 const getIntent = (context: SDSContext) => {
   return context.nluResult.prediction.topIntent;
@@ -70,20 +68,43 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
-            target: "welcome",
-            cond: (context) => getIntent(context) === "meeting",
-//            cond: (context) => getEntity(context, "nluResult") === "meeting",
+           target: "welcomeTwo",
+           cond: (context) => getIntent(context) === "meeting" && !!getEntity(context, "title") && !!getEntity(context, "day"),
             actions: assign({
-//              choice: (context) => getEntity(context, "booking a meeting"),
+              title: (context) => getEntity(context, "title"),
+              day: (context) => getEntity(context, "day"),              
               choice: "booking a meeting",
             }),
           },
           {
+           target: "welcomeThree",
+           cond: (context) => getIntent(context) === "meeting" && !!getEntity(context, "title"),
+            actions: assign({
+              title: (context) => getEntity(context, "title"),
+              choice: "booking a meeting",
+            }),
+          }, 
+          {
+           target: "welcomeFour",
+           cond: (context) => getIntent(context) === "meeting" && !!getEntity(context, "day"),
+            actions: assign({
+              day: (context) => getEntity(context, "day"),              
+              choice: "booking a meeting",
+            }),
+          }, 
+          {
+           target: "welcome",
+           cond: (context) => getIntent(context) === "meeting",
+            actions: assign({
+            
+              choice: "booking a meeting",
+            }),
+          },          
+                            
+          {
             target: "information",
             cond: (context) => getIntent(context) === "information",
-//            cond: (context) => getEntity(context, "nluResult") === "information",
             actions: assign({
-//              choice: (context) => getEntity(context, "finding information"),
               choice: "finding information",
             }),
           },
@@ -95,7 +116,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say('Do you want to book a  <prosody rate="-40%">meeting</prosody> <break time="300ms"/>or find information about someone?'),//test RB
+          entry: say('Do you want to book a meeting or find information about someone?'),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
@@ -144,6 +165,147 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         },
       },
     },
+
+
+    welcomeTwo: {
+      initial: "prompt",
+      on: {
+        RECOGNISED: [
+          {
+            target: "decideTime",
+            cond: (context) => !!getEntity(context, "time"),
+            actions: assign({
+              title: (context) => getEntity(context, "time"),
+            }),
+          },
+          {
+            target: ".nomatch",
+          },
+        ],
+        TIMEOUT: ".prompt",
+      },
+      states: {
+        prompt: {
+          entry: send((context) => ({
+          type: 'SPEAK',
+          value: `Ok, let's creat a meeting for ${context.title} on ${context.day}. At what time is it?`,
+        })),
+          on: { ENDSPEECH: "ask" },
+        },
+        ask: {
+          entry: send("LISTEN"),
+        },
+        nomatch: {
+          entry: say(
+            "Sorry, I don't know what it is. Tell me something I know."
+          ),
+          on: { ENDSPEECH: "ask" },
+        },
+      },
+    },
+
+    welcomeThree: {
+      initial: "prompt",
+      on: {
+        RECOGNISED: [
+          {
+            target: "decideTime",
+            cond: (context) => !!getEntity(context, "time"),
+            actions: assign({
+              title: (context) => getEntity(context, "time"),
+            }),
+          },
+          {
+            target: ".nomatch",
+          },
+        ],
+        TIMEOUT: ".prompt",
+      },
+      states: {
+        prompt: {
+          entry: send((context) => ({
+          type: 'SPEAK',
+          value: `Ok, let's creat a meeting for ${context.title}. On what day is it?`,
+        })),
+          on: { ENDSPEECH: "ask" },
+        },
+        ask: {
+          entry: send("LISTEN"),
+        },
+        nomatch: {
+          entry: say(
+            "Sorry, I don't know what it is. Tell me something I know."
+          ),
+          on: { ENDSPEECH: "ask" },
+        },
+      },
+    },
+
+    welcomeFour: {
+      initial: "prompt",
+      on: {
+        RECOGNISED: [
+          {
+            target: "decideTime",
+            cond: (context) => !!getEntity(context, "time"),
+            actions: assign({
+              title: (context) => getEntity(context, "time"),
+            }),
+          },
+          {
+            target: ".nomatch",
+          },
+        ],
+        TIMEOUT: ".prompt",
+      },
+      states: {
+        prompt: {
+          entry: send((context) => ({
+          type: 'SPEAK',
+          value: `Ok, let's creat a meeting on ${context.day}. What is it about?`,
+        })),
+          on: { ENDSPEECH: "ask" },
+        },
+        ask: {
+          entry: send("LISTEN"),
+        },
+        nomatch: {
+          entry: say(
+            "Sorry, I don't know what it is. Tell me something I know."
+          ),
+          on: { ENDSPEECH: "ask" },
+        },
+      },
+    },
+
+
+
+    decideTime: {
+      entry: send((context) => ({
+        type: "SPEAK",
+        value: `OK, going to ask for the time`,
+      })),
+      on: { ENDSPEECH: "init" },
+    },
+
+
+    decideDay: {
+      entry: send((context) => ({
+        type: "SPEAK",
+        value: `OK, going to ask for the time`,
+      })),
+      on: { ENDSPEECH: "init" },
+    },
+
+    decideTitle: {
+      entry: send((context) => ({
+        type: "SPEAK",
+        value: `OK, going to ask for the time`,
+      })),
+      on: { ENDSPEECH: "init" },
+    },
+
+
     
     information: {
       initial: "prompt",
