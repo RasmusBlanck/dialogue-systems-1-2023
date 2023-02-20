@@ -74,7 +74,15 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     },
     
     menu: {
-      initial: "prompt",
+/* // test RB
+      entry: [ send((context) => ({
+        type: "SPEAK",
+        value: "That's so great to hear. Meeting with X",
+      })), 
+      assign({title : "Meeting with X"}),    ],
+*/ 
+ /* // test, RB   
+
       on: {
         RECOGNISED: [
           {
@@ -97,9 +105,39 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         ],
         TIMEOUT: ".prompt",
       },
+ */     
+          
+      
+      initial: "prompt",      
+      
       states: {
+/*
+        test: {
+        invoke: {
+//        id: 'test',
+        src: (context, event) => kbRequest("kate perry"),
+        onDone: [
+        {
+          target: "#root.dm.info_three",
+          cond: (context,event) => event.data.AbstractText !== "",
+          actions:  assign({ info: (context, event) => event.data.AbstractText }),
+        },
+        {
+           target: "#root.dm.failure_one"
+        },
+        ],
+        onError: {
+          target: "#root.dm.failure"
+        },           
+      },
+        },
+*/        
         prompt: {
-          entry: say("Do you want to book a meeting or find information about someone?"),
+          entry: say("Do you want to book a meeting or find information about someone?"),  
+          actions: assign({
+            
+              choice: "booking a meeting",
+            }),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
