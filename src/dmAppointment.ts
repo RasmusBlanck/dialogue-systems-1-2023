@@ -81,7 +81,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       })), 
       assign({title : "Meeting with X"}),    ],
 */ 
- /* // test, RB   
+ // test, RB   
 
       on: {
         RECOGNISED: [
@@ -105,7 +105,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         ],
         TIMEOUT: ".prompt",
       },
- */     
+      
           
       
       initial: "prompt",      
@@ -238,7 +238,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         {
           target: "info_three",
           cond: (context,event) => event.data.AbstractText !== "",
-          actions:  assign({ info: (context, event) => event.data.AbstractText }),
+          actions:  assign({ info: (context, event) => {return event.data.AbstractText } }),
         },
         {
            target: "failure_one"
@@ -276,8 +276,18 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         type: "SPEAK",
         value: `OK, info on ${context.celeb} available`,
       })),
-      on: { ENDSPEECH: "init" },
+      on: { ENDSPEECH: "give_info" },      
     }, 
+    
+    give_info: {
+      entry: send((context) => ({
+        type: "SPEAK",
+        value: `${context.info}`,
+      })),
+      on: { ENDSPEECH: "init" },      
+    },     
+    
+    
   },
 };
 
