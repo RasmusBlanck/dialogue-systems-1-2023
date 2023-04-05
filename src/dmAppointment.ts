@@ -74,13 +74,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     },
     
     menu: {
-/* // test RB
+ // test RB
       entry: [ send((context) => ({
         type: "SPEAK",
-        value: "That's so great to hear. Meeting with X",
+        value: '<mstts:express-as style="customerservice">meeting</mstts:express-as> meeting <mstts:express-as style="sad">meeting</mstts:express-as>'
+//        value: "That's so great to hear. Meeting with X",
       })), 
       assign({title : "Meeting with X"}),    ],
-*/ 
+ 
  // test, RB   
 
       on: {
@@ -133,7 +134,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         },
 */        
         prompt: {
-          entry: say("Do you want to book a meeting or find information about someone?"),  
+//          entry: say('Do you want to book a  <prosody rate="+400%">meeting</prosody> <break time="300ms"/>or find information about someone?'),//test RB
+//          entry: say('<mstts:express-as style="customerservice">Do you want to book a meeting or find information about someone?</mstts:express-as>'),  
+          entry: say('<mstts:express-as style="customerservice">meeting</mstts:express-as> meeting <mstts:express-as style="sad">meeting</mstts:express-as>'),  
           actions: assign({
             
               choice: "booking a meeting",

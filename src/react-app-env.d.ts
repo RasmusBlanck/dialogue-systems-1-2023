@@ -41,6 +41,8 @@ interface SDSContext {
   celeb: string;
   info: string;
   topic: string;
+  createMeeting: string; //Céline
+  knowFamous: string; //Céline
 }
 
 type SDSEvent =
